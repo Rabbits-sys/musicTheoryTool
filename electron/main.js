@@ -199,7 +199,7 @@ function stopBackendIfNeeded() {
 function createWindow() {
   const win = new BrowserWindow({
     width: 1100,
-    height: 760,
+    height: 850, // increased by 20% from 760
     icon: getIconPath(),
     webPreferences: {
       preload: path.join(__dirname, 'preload.js'),
