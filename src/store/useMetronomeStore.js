@@ -1,0 +1,43 @@
+import { create } from 'zustand'
+
+function getPref(key, def) {
+  try {
+    if (window?.prefs?.get) {
+      const v = window.prefs.get(key)
+      return v === undefined ? def : v
+    }
+  } catch {}
+  try {
+    const raw = localStorage.getItem(key)
+    return raw != null ? JSON.parse(raw) : def
+  } catch { return def }
+}
+function setPref(key, value) {
+  try { if (window?.prefs?.set) return window.prefs.set(key, value) } catch {}
+  try { localStorage.setItem(key, JSON.stringify(value)); return true } catch { return false }
+}
+
+const clamp = (v, lo, hi) => Math.min(hi, Math.max(lo, v))
+
+const initialBpm = clamp(Number(getPref('metronome.bpm', 89)) || 89, 20, 240)
+const initialBeats = clamp(Number(getPref('metronome.beats', 4)) || 4, 2, 8)
+
+const useMetronomeStore = create((set) => ({
+  bpm: initialBpm,
+  beats: initialBeats,
+
+  setBpm: (v) => set(() => {
+    const nv = clamp(Number(v) || initialBpm, 20, 240)
+    setPref('metronome.bpm', nv)
+    return { bpm: nv }
+  }),
+
+  setBeats: (v) => set(() => {
+    const nv = clamp(Number(v) || initialBeats, 2, 8)
+    setPref('metronome.beats', nv)
+    return { beats: nv }
+  }),
+}))
+
+export default useMetronomeStore
+

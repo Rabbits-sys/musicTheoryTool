@@ -7,10 +7,11 @@ import usePracticeStore from './store/usePracticeStore.js'
 import PianoPage from './pages/PianoPage.jsx'
 import IntervalPage from './pages/IntervalPage.jsx'
 import MajorPage from './pages/MajorPage.jsx'
+import MetronomePage from './pages/MetronomePage.jsx'
 
 export default function App() {
   const stage = usePracticeStore(s => s.stage)
-  const [tab, setTab] = useState('practice') // 'practice' | 'piano' | 'interval' | 'major'
+  const [tab, setTab] = useState('practice') // 'practice' | 'piano' | 'interval' | 'major' | 'metronome'
 
   return (
     <>
@@ -25,6 +26,7 @@ export default function App() {
             <Tab value="interval" label="半音/全音练习" />
             <Tab value="major" label="自然大调练习" />
             <Tab value="piano" label="虚拟钢琴" />
+            <Tab value="metronome" label="虚拟节拍器" />
           </Tabs>
         </Toolbar>
       </AppBar>
@@ -47,6 +49,7 @@ export default function App() {
           {tab === 'interval' && <IntervalPage />}
           {tab === 'major' && <MajorPage />}
           {tab === 'piano' && <PianoPage />}
+          {tab === 'metronome' && <MetronomePage />}
         </Box>
       </Container>
     </>
