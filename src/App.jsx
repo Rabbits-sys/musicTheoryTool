@@ -5,10 +5,11 @@ import PracticeRunner from './components/PracticeRunner.jsx'
 import ResultsView from './components/ResultsView.jsx'
 import usePracticeStore from './store/usePracticeStore.js'
 import PianoPage from './pages/PianoPage.jsx'
+import IntervalPage from './pages/IntervalPage.jsx'
 
 export default function App() {
   const stage = usePracticeStore(s => s.stage)
-  const [tab, setTab] = useState('practice') // 'practice' | 'piano'
+  const [tab, setTab] = useState('practice') // 'practice' | 'piano' | 'interval'
 
   return (
     <>
@@ -20,6 +21,7 @@ export default function App() {
           </Typography>
           <Tabs value={tab} onChange={(e, v) => setTab(v)} textColor="inherit" indicatorColor="secondary">
             <Tab value="practice" label="唱名练习" />
+            <Tab value="interval" label="半音/全音练习" />
             <Tab value="piano" label="虚拟钢琴" />
           </Tabs>
         </Toolbar>
@@ -40,6 +42,7 @@ export default function App() {
               {stage === 'select' ? <DifficultySelector /> : stage === 'practice' ? <PracticeRunner /> : <ResultsView />}
             </>
           )}
+          {tab === 'interval' && <IntervalPage />}
           {tab === 'piano' && <PianoPage />}
         </Box>
       </Container>

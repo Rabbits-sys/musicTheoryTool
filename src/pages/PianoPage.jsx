@@ -5,17 +5,42 @@ import KeyboardGroup from '../components/KeyboardGroup.jsx'
 import WaveformCanvas from '../components/WaveformCanvas.jsx'
 import { PianoEngine, OCTAVE_OPTIONS } from '../audio/pianoEngine.js'
 
+function getPref(key, def) {
+  try {
+    if (window?.prefs?.get) {
+      const v = window.prefs.get(key)
+      return v === undefined ? def : v
+    }
+  } catch {}
+  // fallback to localStorage only if available
+  try {
+    const raw = localStorage.getItem(key)
+    return raw != null ? JSON.parse(raw) : def
+  } catch { return def }
+}
+function setPref(key, value) {
+  try { if (window?.prefs?.set) return window.prefs.set(key, value) } catch {}
+  try { localStorage.setItem(key, JSON.stringify(value)); return true } catch { return false }
+}
+
 export default function PianoPage() {
   const engineRef = useRef(null)
   if (!engineRef.current) engineRef.current = new PianoEngine()
   const engine = engineRef.current
 
-  const [groupKeys, setGroupKeys] = useState(['small', 'one', 'two'])
-  const [showLabels, setShowLabels] = useState(false)
-  const [showBindings, setShowBindings] = useState(false)
+  const [groupKeys, setGroupKeys] = useState(() => {
+    const v = getPref('piano.groupKeys', null)
+    if (Array.isArray(v) && v.length === 3) return v
+    return ['small', 'one', 'two']
+  })
+  const [showLabels, setShowLabels] = useState(() => !!getPref('piano.showLabels', false))
+  const [showBindings, setShowBindings] = useState(() => !!getPref('piano.showBindings', false))
 
   const [instruments, setInstruments] = useState([])
-  const [instrumentKey, setInstrumentKey] = useState('')
+  const [instrumentKey, setInstrumentKey] = useState(() => {
+    const v = getPref('piano.instrumentKey', '')
+    return typeof v === 'string' ? v : ''
+  })
   const [loadError, setLoadError] = useState('')
 
   useEffect(() => {
@@ -27,8 +52,12 @@ export default function PianoPage() {
         const list = Array.isArray(json?.instruments) ? json.instruments : []
         setInstruments(list)
         if (list.length > 0) {
-          setInstrumentKey(list[0].key || '')
-          engine.setInstrument(list[0])
+          const saved = instrumentKey
+          const found = list.find(i => i.key === saved)
+          const pick = found || list[0]
+          setInstrumentKey(pick.key)
+          engine.setInstrument(pick)
+          setPref('piano.instrumentKey', pick.key)
         } else {
           setLoadError('未在 samples/manifest.json 中找到任何音色条目。')
         }
@@ -37,20 +66,35 @@ export default function PianoPage() {
       }
     }
     load()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [engine])
 
   useEffect(() => {
     if (!instrumentKey) return
     const def = instruments.find((i) => i.key === instrumentKey)
-    if (def) engine.setInstrument(def)
+    if (def) {
+      engine.setInstrument(def)
+      setPref('piano.instrumentKey', instrumentKey)
+    }
   }, [instrumentKey, instruments, engine])
 
   const options = useMemo(() => OCTAVE_OPTIONS, [])
-  const selectedOpts = useMemo(() => groupKeys.map(k => options.find(o => o.key === k) || options[0]), [groupKeys, options])
+  const selectedOpts = useMemo(() => {
+    const validKeys = new Set(options.map(o => o.key))
+    const safe = groupKeys.map(k => (validKeys.has(k) ? k : options[0].key))
+    return safe.map(k => options.find(o => o.key === k))
+  }, [groupKeys, options])
 
   const handleChangeGroup = (index, newKey) => {
-    setGroupKeys(prev => prev.map((k, i) => (i === index ? newKey : k)))
+    setGroupKeys(prev => {
+      const next = prev.map((k, i) => (i === index ? newKey : k))
+      setPref('piano.groupKeys', next)
+      return next
+    })
   }
+
+  useEffect(() => { setPref('piano.showLabels', !!showLabels) }, [showLabels])
+  useEffect(() => { setPref('piano.showBindings', !!showBindings) }, [showBindings])
 
   const onPlay = (midi) => {
     engine.playMidi(midi)
@@ -58,10 +102,18 @@ export default function PianoPage() {
 
   const analyser = engine.getAnalyser()
 
-  // Restore prior keyboard window mapping: 2 octaves (24 semis) shiftable by [ and ] within C2..B6
-  const [keyboardBaseMidi, setKeyboardBaseMidi] = useState(60) // C4
+  // Persisted keyboard window mapping: 2 octaves (24 semis) shiftable by - and + within C2..B6
   const MIN_BASE = 36 // C2
   const MAX_END = 83 // B6
+  const [keyboardBaseMidi, setKeyboardBaseMidi] = useState(() => {
+    const saved = Number(getPref('piano.keyboardBaseMidi', 60))
+    let base = Number.isFinite(saved) ? Math.floor(saved) : 60
+    if (base < MIN_BASE) base = MIN_BASE
+    if (base + 23 > MAX_END) base = MAX_END - 23
+    return base
+  })
+  useEffect(() => { setPref('piano.keyboardBaseMidi', keyboardBaseMidi) }, [keyboardBaseMidi])
+
   const rowLow = ['Z','S','X','D','C','V','G','B','H','N','J','M']
   const rowHigh = ['Q','2','W','3','E','R','5','T','6','Y','7','U']
   const keyToOffset = useMemo(() => {
