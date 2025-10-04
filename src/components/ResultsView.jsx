@@ -44,11 +44,10 @@ export default function ResultsView() {
             ))}
           </Box>
           <Box>
-            <Button variant="contained" onClick={reset}>返回选择难度</Button>
+            <Button variant="contained" onClick={reset}>返回难度选择</Button>
           </Box>
         </Stack>
       </CardContent>
     </Card>
   )
 }
-

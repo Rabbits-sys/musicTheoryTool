@@ -22,7 +22,7 @@ export default function IntervalResultsView() {
           <Typography variant="h6">练习结果</Typography>
           <Typography sx={{ mt: 1 }}>总体正确率：{accuracy}%（{correctCount}/{totalChecks}）</Typography>
           <Box sx={{ mt: 2 }}>
-            <Button variant="contained" onClick={reset}>返回并重新选择难度</Button>
+            <Button variant="contained" onClick={reset}>返回难度选择</Button>
           </Box>
         </CardContent>
       </Card>
@@ -61,4 +61,3 @@ export default function IntervalResultsView() {
     </Stack>
   )
 }
-
