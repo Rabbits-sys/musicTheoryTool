@@ -5,33 +5,33 @@ const midiToFreq = (m) => 440 * Math.pow(2, (m - 69) / 12)
 
 export const TIMBRE_OPTIONS = [
   {
-    key: 'soft',
-    label: '柔和钢琴',
-    config: {
-      osc1: 'sine', osc2: 'triangle', detune: 5,
-      filterType: 'lowpass', filterFreq: 6000, filterQ: 0.5,
-      env: { attack: 0.01, decay: 0.2, sustain: 0.6, release: 0.4 },
-      masterGain: 0.2,
-    },
-  },
-  {
-    key: 'bright',
-    label: '明亮钢琴',
-    config: {
-      osc1: 'sawtooth', osc2: 'square', detune: 8,
-      filterType: 'lowpass', filterFreq: 9000, filterQ: 0.7,
-      env: { attack: 0.005, decay: 0.15, sustain: 0.5, release: 0.3 },
-      masterGain: 0.2,
-    },
-  },
-  {
-    key: 'epiano',
-    label: '电钢琴',
+    key: 'acoustic_piano',
+    label: '原声钢琴 (acoustic piano)',
     config: {
       osc1: 'triangle', osc2: 'sine', detune: 2,
-      filterType: 'lowpass', filterFreq: 5000, filterQ: 0.3,
-      env: { attack: 0.01, decay: 0.3, sustain: 0.7, release: 0.5 },
-      masterGain: 0.18,
+      filterType: 'lowpass', filterFreq: 6000, filterQ: 0.5,
+      env: { attack: 0.005, decay: 0.25, sustain: 0.55, release: 0.4 },
+      masterGain: 0.2,
+    },
+  },
+  {
+    key: 'acoustic_grand_piano',
+    label: '大钢琴 (acoustic grand piano)',
+    config: {
+      osc1: 'triangle', osc2: 'sine', detune: 3,
+      filterType: 'lowpass', filterFreq: 6500, filterQ: 0.6,
+      env: { attack: 0.003, decay: 0.35, sustain: 0.6, release: 0.45 },
+      masterGain: 0.2,
+    },
+  },
+  {
+    key: 'bright_acoustic_piano',
+    label: '亮色钢琴 (bright acoustic piano)',
+    config: {
+      osc1: 'sawtooth', osc2: 'square', detune: 6,
+      filterType: 'lowpass', filterFreq: 10000, filterQ: 0.7,
+      env: { attack: 0.002, decay: 0.18, sustain: 0.45, release: 0.3 },
+      masterGain: 0.2,
     },
   },
 ]
@@ -41,8 +41,8 @@ export class PianoEngine {
     this.ctx = null
     this.master = null
     this.analyser = null
-    this.voices = new Map() // key: id, value: {osc1, osc2, gain, filter}
-    this.timbreKey = 'soft'
+    this.voices = new Map()
+    this.timbreKey = 'acoustic_piano'
     this.timbre = TIMBRE_OPTIONS[0].config
   }
 
@@ -53,6 +53,7 @@ export class PianoEngine {
     master.gain.value = this.timbre?.masterGain ?? 0.2
     const analyser = ctx.createAnalyser()
     analyser.fftSize = 2048
+    analyser.smoothingTimeConstant = 0.7
     master.connect(analyser)
     analyser.connect(ctx.destination)
 

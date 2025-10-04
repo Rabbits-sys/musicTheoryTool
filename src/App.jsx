@@ -34,7 +34,7 @@ export default function App() {
                   1) 选择难度后，系统会按节拍依次显示 1–7 的数字。<br />
                   2) 在每个数字显示到下一个数字出现前，请对着麦克风唱出对应唱名：1=do，2=re，3=mi，4=fa，5=so/sol，6=la，7=ti/si。<br />
                   3) 练习结束后显示逐题判定与总体正确率。<br />
-                  4) 提示：请确保已允许麦克风访问，并已启动后端（FastAPI + Vosk）。
+                  4) 提示：请确保已允许麦克风访问。
                 </Alert>
               </Box>
               {stage === 'select' ? <DifficultySelector /> : stage === 'practice' ? <PracticeRunner /> : <ResultsView />}

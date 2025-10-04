@@ -12,7 +12,7 @@ export default function PianoPage() {
 
   const [groupKeys, setGroupKeys] = useState(['small', 'one', 'two'])
   const [showLabels, setShowLabels] = useState(false)
-  const [timbreKey, setTimbreKey] = useState('soft')
+  const [timbreKey, setTimbreKey] = useState('acoustic_piano')
 
   const options = useMemo(() => OCTAVE_OPTIONS, [])
   const timbreOptions = useMemo(() => TIMBRE_OPTIONS, [])
