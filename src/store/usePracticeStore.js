@@ -7,8 +7,21 @@ const difficultyPresets = {
   extreme: { label: '极难', intervalMs: 800, count: 12 },
 }
 
-function randomSequence(count) {
-  return Array.from({ length: count }, () => 1 + Math.floor(Math.random() * 7))
+export function randomSequence(count) {
+  const seq = []
+  if (count <= 0) return seq
+  // First element: uniform 1..7
+  seq.push(1 + Math.floor(Math.random() * 7))
+  // Subsequent: uniform from 1..7 excluding previous value
+  for (let i = 1; i < count; i++) {
+    const prev = seq[i - 1]
+    // pick 0..5, then map to 1..7 skipping prev to avoid bias
+    const r = Math.floor(Math.random() * 6) // 0..5
+    let n = r + 1
+    if (n >= prev) n += 1 // now n in 1..7 and n != prev
+    seq.push(n)
+  }
+  return seq
 }
 
 const usePracticeStore = create((set, get) => ({
@@ -36,4 +49,3 @@ const usePracticeStore = create((set, get) => ({
 
 export default usePracticeStore
 export { difficultyPresets }
-

@@ -90,7 +90,7 @@ export default function PracticeRunner() {
       } catch (e) {
         console.error(e)
         // Present a friendly message instead of raw error like 'ASR ws error'
-        setError('语音识别服务暂不可用，请耐心等待并允许麦克风访问。')
+        // setError('语音识别服务暂不可用，请耐心等待并允许麦克风访问。')
         setStatus('error')
         try { await mic.stop() } catch {}
         try { asr.close() } catch {}
