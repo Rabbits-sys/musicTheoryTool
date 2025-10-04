@@ -1,0 +1,59 @@
+{
+  "name": "music-theory-tool",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Electron + React app for solfege practice with FastAPI + Vosk backend",
+  "main": "electron/main.js",
+  "author": "",
+  "license": "MIT",
+  "type": "module",
+  "scripts": {
+    "dev": "concurrently -k -n BACKEND,RENDERER,ELECTRON -c \"green,cyan,magenta\" \"npm:dev:backend\" \"npm:dev:renderer\" \"npm:dev:electron\"",
+    "dev:backend": "python -m uvicorn backend.main:app --host 127.0.0.1 --port 8000 --reload",
+    "dev:renderer": "vite",
+    "dev:electron": "wait-on http://localhost:5173 && electron .",
+    "build": "npm run build:renderer && electron-builder",
+    "build:renderer": "vite build",
+    "lint": "echo 'no linter configured'"
+  },
+  "dependencies": {
+    "@emotion/react": "^11.13.3",
+    "@emotion/styled": "^11.13.0",
+    "@mui/icons-material": "^6.1.8",
+    "@mui/material": "^6.1.8",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "zustand": "^4.5.5"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-react": "^4.3.4",
+    "concurrently": "^9.1.0",
+    "electron": "33.4.11",
+    "electron-builder": "^25.1.8",
+    "vite": "^5.4.10",
+    "wait-on": "^8.0.1"
+  },
+  "build": {
+    "appId": "com.example.musictheorytool",
+    "asar": true,
+    "directories": {
+      "output": "release",
+      "buildResources": "build"
+    },
+    "files": [
+      "dist/**",
+      "electron/**",
+      "backend/**",
+      "models/**",
+      "package.json"
+    ],
+    "extraResources": [
+      { "from": "models", "to": "models" }
+    ],
+    "win": {
+      "target": ["nsis"],
+      "artifactName": "${productName}-${version}-Setup.${ext}"
+    }
+  }
+}
+
