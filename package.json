@@ -53,11 +53,13 @@
     ],
     "extraResources": [
       { "from": "models", "to": "models" },
-      { "from": "backend/dist", "to": "backend" }
+      { "from": "backend/dist", "to": "backend" },
+      { "from": "logo.ico", "to": "." }
     ],
     "win": {
       "target": ["nsis"],
-      "artifactName": "${productName}-${version}-Setup.${ext}"
+      "artifactName": "${productName}-${version}-Setup.${ext}",
+      "icon": "logo.ico"
     }
   }
 }

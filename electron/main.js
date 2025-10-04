@@ -10,6 +10,22 @@ const isDev = !app.isPackaged
 let backendProc = null
 let backendStopTimer = null
 
+function getIconPath() {
+  try {
+    if (isDev) {
+      return path.join(__dirname, '..', 'logo.ico')
+    }
+    return path.join(process.resourcesPath, 'logo.ico')
+  } catch {
+    return undefined
+  }
+}
+
+// Set AppUserModelID for Windows taskbar icon consistency
+if (process.platform === 'win32') {
+  try { app.setAppUserModelId('com.example.musictheorytool') } catch {}
+}
+
 function startBackendIfNeeded() {
   if (isDev) return
   if (backendProc) return
@@ -77,6 +93,7 @@ function createWindow() {
   const win = new BrowserWindow({
     width: 1100,
     height: 760,
+    icon: getIconPath(),
     webPreferences: {
       preload: path.join(__dirname, 'preload.js'),
       contextIsolation: true,

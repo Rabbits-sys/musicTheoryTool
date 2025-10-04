@@ -247,9 +247,9 @@ export default function MetronomePage() {
             <Stack alignItems="center">
               <Typography variant="subtitle2" color="text.secondary" gutterBottom>节拍数</Typography>
               <Stack direction="row" alignItems="center" spacing={2}>
-                <IconButton onClick={decrementBeats}><RemoveIcon /></IconButton>
+                <IconButton onClick={decrementBeats} disabled={isPlaying}><RemoveIcon /></IconButton>
                 <Typography variant="h5" sx={{ width: 24, textAlign: 'center' }}>{beats}</Typography>
-                <IconButton onClick={incrementBeats}><AddIcon /></IconButton>
+                <IconButton onClick={incrementBeats} disabled={isPlaying}><AddIcon /></IconButton>
               </Stack>
               <Typography variant="caption" color="text.disabled" mt={1}>范围 2–8</Typography>
             </Stack>

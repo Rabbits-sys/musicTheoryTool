@@ -19,7 +19,7 @@ export default function App() {
       <AppBar position="static">
         <Toolbar>
           <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
-            乐理练习工具
+            浮力声乐——乐理练习
           </Typography>
           <Tabs value={tab} onChange={(e, v) => setTab(v)} textColor="inherit" indicatorColor="secondary">
             <Tab value="practice" label="唱名练习" />
