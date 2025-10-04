@@ -10,8 +10,6 @@ export default function WaveformCanvas({ analyser, height = 120 }) {
     if (!canvas) return
 
     const ctx2d = canvas.getContext('2d')
-    const dataArray = new Uint8Array(analyser ? analyser.fftSize : 2048)
-
     const resize = () => {
       const parent = canvas.parentElement
       const dpr = window.devicePixelRatio || 1
@@ -25,31 +23,38 @@ export default function WaveformCanvas({ analyser, height = 120 }) {
     resize()
     window.addEventListener('resize', resize)
 
+    // Frequency data buffer
+    const freqArray = new Uint8Array(analyser ? analyser.frequencyBinCount : 1024)
+
     const draw = () => {
-      if (!ctx2d) return
-      ctx2d.clearRect(0, 0, canvas.width, canvas.height)
+      const w = canvas.width / (window.devicePixelRatio || 1)
+      const h = canvas.height / (window.devicePixelRatio || 1)
+      ctx2d.clearRect(0, 0, w, h)
       ctx2d.fillStyle = '#0a0a0a'
-      ctx2d.fillRect(0, 0, canvas.width, canvas.height)
+      ctx2d.fillRect(0, 0, w, h)
 
       if (analyser) {
-        analyser.getByteTimeDomainData(dataArray)
-        const w = canvas.width / (window.devicePixelRatio || 1)
-        const h = canvas.height / (window.devicePixelRatio || 1)
-        ctx2d.strokeStyle = '#00e5ff'
-        ctx2d.lineWidth = 2
-        ctx2d.beginPath()
-        const slice = w / dataArray.length
-        for (let i = 0; i < dataArray.length; i++) {
-          const v = dataArray[i] / 128.0 - 1.0 // -1..1
-          const x = i * slice
-          const y = h / 2 + v * (h / 2 - 4)
-          if (i === 0) ctx2d.moveTo(x, y)
-          else ctx2d.lineTo(x, y)
+        analyser.getByteFrequencyData(freqArray)
+        // Draw bars
+        const bars = Math.min(96, freqArray.length) // limit bars for readability
+        const gap = 2
+        const barW = Math.max(2, Math.floor((w - (bars - 1) * gap) / bars))
+        for (let i = 0; i < bars; i++) {
+          const v = freqArray[i] / 255 // 0..1
+          const barH = Math.max(2, Math.floor(v * (h - 4)))
+          const x = i * (barW + gap)
+          const y = h - barH
+          // Gradient color: cyan to purple
+          const grad = ctx2d.createLinearGradient(0, y, 0, y + barH)
+          grad.addColorStop(0, '#00e5ff')
+          grad.addColorStop(1, '#7c4dff')
+          ctx2d.fillStyle = grad
+          ctx2d.fillRect(x, y, barW, barH)
         }
-        ctx2d.stroke()
       }
       rafRef.current = requestAnimationFrame(draw)
     }
+
     draw()
 
     return () => {
@@ -64,4 +69,3 @@ export default function WaveformCanvas({ analyser, height = 120 }) {
     </Box>
   )
 }
-

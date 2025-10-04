@@ -3,19 +3,54 @@
 
 const midiToFreq = (m) => 440 * Math.pow(2, (m - 69) / 12)
 
+export const TIMBRE_OPTIONS = [
+  {
+    key: 'soft',
+    label: '柔和钢琴',
+    config: {
+      osc1: 'sine', osc2: 'triangle', detune: 5,
+      filterType: 'lowpass', filterFreq: 6000, filterQ: 0.5,
+      env: { attack: 0.01, decay: 0.2, sustain: 0.6, release: 0.4 },
+      masterGain: 0.2,
+    },
+  },
+  {
+    key: 'bright',
+    label: '明亮钢琴',
+    config: {
+      osc1: 'sawtooth', osc2: 'square', detune: 8,
+      filterType: 'lowpass', filterFreq: 9000, filterQ: 0.7,
+      env: { attack: 0.005, decay: 0.15, sustain: 0.5, release: 0.3 },
+      masterGain: 0.2,
+    },
+  },
+  {
+    key: 'epiano',
+    label: '电钢琴',
+    config: {
+      osc1: 'triangle', osc2: 'sine', detune: 2,
+      filterType: 'lowpass', filterFreq: 5000, filterQ: 0.3,
+      env: { attack: 0.01, decay: 0.3, sustain: 0.7, release: 0.5 },
+      masterGain: 0.18,
+    },
+  },
+]
+
 export class PianoEngine {
   constructor() {
     this.ctx = null
     this.master = null
     this.analyser = null
     this.voices = new Map() // key: id, value: {osc1, osc2, gain, filter}
+    this.timbreKey = 'soft'
+    this.timbre = TIMBRE_OPTIONS[0].config
   }
 
   ensureContext() {
     if (this.ctx) return
     const ctx = new (window.AudioContext || window.webkitAudioContext)()
     const master = ctx.createGain()
-    master.gain.value = 0.2
+    master.gain.value = this.timbre?.masterGain ?? 0.2
     const analyser = ctx.createAnalyser()
     analyser.fftSize = 2048
     master.connect(analyser)
@@ -24,6 +59,15 @@ export class PianoEngine {
     this.ctx = ctx
     this.master = master
     this.analyser = analyser
+  }
+
+  setTimbreByKey(key) {
+    const found = TIMBRE_OPTIONS.find(t => t.key === key)
+    if (found) {
+      this.timbreKey = key
+      this.timbre = found.config
+      if (this.master) this.master.gain.value = this.timbre?.masterGain ?? this.master.gain.value
+    }
   }
 
   getAnalyser() {
@@ -47,19 +91,19 @@ export class PianoEngine {
     const freq = midiToFreq(midi)
 
     const osc1 = this.ctx.createOscillator()
-    osc1.type = 'sine'
+    osc1.type = this.timbre?.osc1 || 'sine'
     osc1.frequency.value = freq
 
     const osc2 = this.ctx.createOscillator()
-    osc2.type = 'triangle'
-    osc2.detune.value = +5
+    osc2.type = this.timbre?.osc2 || 'triangle'
+    osc2.detune.value = +(this.timbre?.detune ?? 5)
     osc2.frequency.value = freq
 
     const gain = this.ctx.createGain()
     const filter = this.ctx.createBiquadFilter()
-    filter.type = 'lowpass'
-    filter.frequency.value = 6000
-    filter.Q.value = 0.5
+    filter.type = this.timbre?.filterType || 'lowpass'
+    filter.frequency.value = this.timbre?.filterFreq ?? 6000
+    filter.Q.value = this.timbre?.filterQ ?? 0.5
 
     // Wiring: osc -> filter -> gain -> master
     osc1.connect(filter)
@@ -67,8 +111,9 @@ export class PianoEngine {
     filter.connect(gain)
     gain.connect(this.master)
 
-    // Simple ADSR
-    const attack = 0.01, decay = 0.2, sustain = 0.6, release = 0.4
+    // ADSR
+    const env = this.timbre?.env || { attack: 0.01, decay: 0.2, sustain: 0.6, release: 0.4 }
+    const attack = env.attack, decay = env.decay, sustain = env.sustain, release = env.release
     gain.gain.setValueAtTime(0.0001, now)
     gain.gain.linearRampToValueAtTime(1.0, now + attack)
     gain.gain.linearRampToValueAtTime(sustain, now + attack + decay)
@@ -118,4 +163,3 @@ export function labelForWhite(baseMidi, whiteIndex) {
   const octave = Math.floor((cMidi / 12) - 1) // MIDI octave mapping: C4=60 => (60/12 -1)=4
   return `${name}${octave}`
 }
-
