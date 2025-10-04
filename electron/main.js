@@ -11,10 +11,10 @@ function createWindow() {
     width: 1100,
     height: 760,
     webPreferences: {
-      preload: path.join(__dirname, 'preload.js'),
       contextIsolation: true,
       nodeIntegration: false,
       sandbox: true,
+      webSecurity: false, // allow file:// fetch for local assets like samples/manifest.json
     },
   })
 
@@ -36,4 +36,3 @@ app.whenReady().then(() => {
 app.on('window-all-closed', function () {
   if (process.platform !== 'darwin') app.quit()
 })
-

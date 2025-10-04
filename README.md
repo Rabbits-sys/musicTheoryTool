@@ -1,4 +1,4 @@
-# 乐理练习工具（唱名识别）
+# 乐理练习工具（唱名识别 + 虚拟钢琴）
 
 Electron + React 前端，FastAPI + Vosk 后端。根据不同难度随机显示 1-7 数字，按节拍分段录音并离线识别是否唱对对应的唱名（do, re, mi, fa, so/sol, la, ti/si），展示逐题对错与总体正确率。
 
@@ -70,6 +70,43 @@ Invoke-RestMethod -Uri 'http://127.0.0.1:8000/health' -Method GET | ConvertTo-Js
 - 需要允许应用访问麦克风（Windows 设置 > 隐私与安全 > 麦克风 > 允许桌面应用访问）。
 - 当前使用的 Vosk 英文小模型，建议按英语读音发音（do, re, mi…），支持 "so/sol"、"ti/si" 两种写法。
 
+## 虚拟钢琴（基于 Tone.js 采样）
+
+虚拟钢琴使用 Tone.js 的 Sampler 加载顶层 `./samples/` 下的采样音色。运行时从 `samples/manifest.json` 读取可用音色列表（不进行任何目录扫描）。
+
+- 音色清单路径：`./samples/manifest.json`
+- 采样文件路径：放在 `./samples/{instrument_key}/` 目录中（mp3 或 wav）
+- 典型清单结构示例：
+
+```json
+{
+  "instruments": [
+    {
+      "key": "piano",
+      "label": "piano",
+      "baseUrl": "samples/piano/",
+      "urls": {
+        "C4": "C4.mp3",
+        "E4": "E4.mp3",
+        "G4": "G4.mp3",
+        "C5": "C5.mp3"
+      }
+    }
+  ]
+}
+```
+
+- 说明：
+  - `key` 使用子文件夹名；下拉框显示该名称。
+  - `baseUrl` 为相对路径（开发与打包后均为 `/samples/...`）；Vite 会在开发与构建阶段把顶层 `./samples` 复制到可访问位置。
+  - `urls` 中的键为音名（Tone.js 支持的 Note 标记，如 C4、D#4、F5 等），值为该音的采样文件名。
+  - Sampler 会对未提供采样的音高做移调补间，建议每隔 3–4 个半音采一次样以提升音质。
+
+### 开发与打包
+- 开发（Vite dev server）：已配置 `vite-plugin-static-copy` 将顶层 `./samples` 复制为 `/samples`，页面通过 `fetch('samples/manifest.json')` 与 `baseUrl` 加载样本。
+- 生产（Electron 打包）：`./samples` 会复制到应用资源目录，且构建产物中也包含 `/samples` 静态文件；页面同样通过相对路径访问。
+- 注意：仓库中的 `public/samples` 已清理，所有样本与清单仅使用顶层 `./samples`。
+
 ## 打包
 
 ```powershell
@@ -87,9 +124,11 @@ npx electron-builder
   - asr/ WebSocket 客户端
   - store/ Zustand 全局状态
 - models/ Vosk 英文小模型
+- public/ 静态资源（如样本音频、图标等）
+  - samples/ 音色采样文件及清单
 
 ## 常见问题
 - 后端无法启动或 /health 报错：确认 `models/vosk-model-small-en-us-0.15` 是否存在且可读；如移动了目录，可设置环境变量 `VOSK_MODEL_PATH` 指向模型目录。
 - 前端无声音/无法录音：检查系统麦克风权限；更换麦克风设备；关闭其他占用麦克风的应用。
 - 识别率低：保证安静环境、靠近麦克风、按英语读音清晰发音；必要时可调慢难度以留足发音时间。
-
+- 虚拟钢琴未加载音色：检查 `public/samples/manifest.json` 是否存在且有效，路径大小写是否正确，采样文件格式是否被支持。
