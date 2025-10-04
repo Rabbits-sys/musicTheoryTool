@@ -1,4 +1,4 @@
-import { app, BrowserWindow } from 'electron'
+import { app, BrowserWindow, Menu, shell, dialog } from 'electron'
 import path from 'path'
 import { fileURLToPath } from 'url'
 import { spawn, execFileSync } from 'child_process'
@@ -6,6 +6,113 @@ import { spawn, execFileSync } from 'child_process'
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 
 const isDev = !app.isPackaged
+const isMac = process.platform === 'darwin'
+
+// Define application menu (including Help)
+function setupAppMenu() {
+  const template = [
+    // macOS app menu
+    ...(isMac
+      ? [
+          {
+            label: app.name,
+            submenu: [
+              { role: 'about' },
+              { type: 'separator' },
+              { role: 'services' },
+              { type: 'separator' },
+              { role: 'hide' },
+              { role: 'hideOthers' },
+              { role: 'unhide' },
+              { type: 'separator' },
+              { role: 'quit' },
+            ],
+          },
+        ]
+      : []),
+
+    // File menu
+    {
+      label: 'File',
+      submenu: [isMac ? { role: 'close' } : { role: 'quit' }],
+    },
+
+    // Edit menu
+    {
+      label: 'Edit',
+      submenu: [
+        { role: 'undo' },
+        { role: 'redo' },
+        { type: 'separator' },
+        { role: 'cut' },
+        { role: 'copy' },
+        { role: 'paste' },
+        { role: 'delete' },
+        { type: 'separator' },
+        { role: 'selectAll' },
+      ],
+    },
+
+    // View menu
+    {
+      label: 'View',
+      submenu: [
+        { role: 'reload' },
+        { role: 'forceReload' },
+        { role: 'toggleDevTools' },
+        { type: 'separator' },
+        { role: 'resetZoom' },
+        { role: 'zoomIn' },
+        { role: 'zoomOut' },
+        { type: 'separator' },
+        { role: 'togglefullscreen' },
+      ],
+    },
+    // Window menu
+    {
+      label: 'Window',
+      role: 'window',
+      submenu: [
+        { role: 'minimize' },
+        { role: 'zoom' },
+        { role: 'close' },
+      ],
+    },
+    // Help menu
+    {
+      role: 'help',
+      label: 'Help',
+      submenu: [
+        {
+          label: '关于本程序',
+          click: () => {
+            dialog.showMessageBox({
+              type: 'info',
+              title: '关于',
+              message: '乐理练习工具',
+              detail:
+                '本项目由「浮力声乐」开发，旨在提供简洁高效的乐理/视唱练耳练习工具。\nGitHub 页面：https://github.com/Rabbits-sys/musicTheoryTool',
+            })
+          },
+        },
+        { type: 'separator' },
+        {
+          label: '项目 wiki',
+          click: async () => {
+            try {
+              await shell.openExternal('https://github.com/Rabbits-sys/musicTheoryTool')
+            } catch {}
+          },
+        },
+        { type: 'separator' },
+        { label: '项目归属：浮力声乐', enabled: false },
+      ],
+    },
+  ]
+
+  const menu = Menu.buildFromTemplate(template)
+  Menu.setApplicationMenu(menu)
+}
 
 let backendProc = null
 let backendStopTimer = null
@@ -113,6 +220,7 @@ function createWindow() {
 }
 
 app.whenReady().then(() => {
+  setupAppMenu()
   createWindow()
   app.on('activate', function () {
     if (BrowserWindow.getAllWindows().length === 0) createWindow()
