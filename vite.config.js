@@ -8,13 +8,13 @@ export default defineConfig(({ mode }) => ({
     react(),
     viteStaticCopy({
       targets: [
-        { src: 'samples/**/*', dest: 'samples' },
+        { src: 'samples/*', dest: 'samples' },
       ],
       watch: true,
     }),
   ],
   root: '.',
-  base: '/',
+  base: './',
   build: {
     outDir: 'dist',
     sourcemap: true,
