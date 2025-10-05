@@ -8,6 +8,8 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const isDev = !app.isPackaged
 const isMac = process.platform === 'darwin'
 
+process.env['ELECTRON_DISABLE_SECURITY_WARNINGS'] = 'true' // Disable security warnings for demo; do not use in production
+
 // Define application menu (including Help)
 function setupAppMenu() {
   const template = [
@@ -202,7 +204,6 @@ function createWindow() {
     height: 850, // increased by 20% from 760
     icon: getIconPath(),
     webPreferences: {
-      preload: path.join(__dirname, 'preload.js'),
       contextIsolation: true,
       nodeIntegration: false,
       sandbox: false,
