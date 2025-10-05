@@ -136,6 +136,8 @@ export default function MetronomePage() {
     Tone.Transport.stop()
     Tone.Transport.cancel()
     Tone.Transport.bpm.value = bpm
+    // keep Transport's time signature in sync for clarity/consistency
+    try { Tone.Transport.timeSignature = beatsRef.current || beats } catch {}
     indexRef.current = 0
     setActiveIndex(-1)
 
@@ -150,8 +152,9 @@ export default function MetronomePage() {
       } else {
         weakSynthRef.current?.triggerAttackRelease('C6', '16n', time, 0.5)
       }
-      setActiveIndex(i)
-      indexRef.current = (i + 1) % beatsRef.current
+      // sync UI highlight to audio timeline
+      Tone.Draw.schedule(() => setActiveIndex(i), time)
+      indexRef.current = (i + 1) % (beatsRef.current || beats)
     }, '4n')
 
     Tone.Transport.start('+0.05')
@@ -161,6 +164,10 @@ export default function MetronomePage() {
   const stopTransport = () => {
     if (Tone.Transport.state !== 'stopped') {
       Tone.Transport.stop()
+      if (loopIdRef.current != null) {
+        try { Tone.Transport.clear(loopIdRef.current) } catch {}
+        loopIdRef.current = null
+      }
       Tone.Transport.cancel()
       Tone.Transport.position = 0
     }
@@ -188,10 +195,11 @@ export default function MetronomePage() {
   const decrementBeats = () => setBeatsStore(beats - 1)
   const incrementBeats = () => setBeatsStore(beats + 1)
 
-  // if beats changed while playing, keep rotating within new bounds
+  // if beats changed while playing, realign index and update time signature
   useEffect(() => {
     if (isPlaying) {
-      indexRef.current = indexRef.current % beatsRef.current
+      try { Tone.Transport.timeSignature = beats } catch {}
+      indexRef.current = 0 // restart measure at the first beat for stability
     }
   }, [beats, isPlaying])
 
