@@ -193,3 +193,17 @@ set VOSK_MODEL_PATH=D:\path\to\vosk-model-small-en-us-0.15
 ## 9. 许可证
 
 MIT（见 `LICENSE`）。
+
+## 10. 致谢
+
+- Vosk：https://alphacephei.com/vosk/
+- FastAPI：https://fastapi.tiangolo.com/
+- Electron：https://www.electronjs.org/
+- React：https://react.dev/
+- Vite：https://vitejs.dev/
+- MUI：https://mui.com/
+- Zustand：https://zustand.surge.sh/
+- PyInstaller：https://www.pyinstaller.org/
+- electron-builder：https://www.electron.build/
+- github 开源项目（Semitone-Or-Wholetone）：https://github.com/LucyConan/Semitone-Or-Wholetone
+- github 开源项目（tonejs-instruments）：https://github.com/nbrosowsky/tonejs-instruments
