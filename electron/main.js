@@ -120,7 +120,7 @@ let backendStopTimer = null
 function getIconPath() {
   try {
     if (isDev) {
-      return path.join(__dirname, '..', 'logo.ico')
+      return path.join(__dirname, '..', 'resources', 'logo.ico')
     }
     return path.join(process.resourcesPath, 'logo.ico')
   } catch {

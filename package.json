@@ -48,18 +48,18 @@
       "dist/**",
       "electron/**",
       "backend/**",
-      "models/**",
+      "resources/**",
       "package.json"
     ],
     "extraResources": [
-      { "from": "models", "to": "models" },
+      { "from": "resources/models", "to": "models" },
       { "from": "backend/dist", "to": "backend" },
-      { "from": "logo.ico", "to": "." }
+      { "from": "resources/logo.ico", "to": "." }
     ],
     "win": {
       "target": ["nsis"],
       "artifactName": "${productName}-${version}-Setup.${ext}",
-      "icon": "logo.ico"
+      "icon": "resources/logo.ico"
     }
   }
 }

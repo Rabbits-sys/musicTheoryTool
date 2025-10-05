@@ -8,7 +8,7 @@ export default defineConfig(({ mode }) => ({
     react(),
     viteStaticCopy({
       targets: [
-        { src: 'samples/*', dest: 'samples' },
+        { src: 'resources/samples/*', dest: 'samples' },
       ],
       watch: true,
     }),

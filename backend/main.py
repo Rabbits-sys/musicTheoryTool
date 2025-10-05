@@ -1,4 +1,3 @@
-import asyncio
 import json
 import os
 from typing import Optional
@@ -14,7 +13,7 @@ SetLogLevel(-1)
 app = FastAPI(title="Music Theory Tool Backend")
 
 # CORS for dev; Electron loads file:// so ws is fine, but http API may be accessed by vite dev server
-app.add_middleware(
+app.add_middleware(  # type: ignore[arg-type]
     CORSMiddleware,
     allow_origins=["*"],
     allow_credentials=True,
@@ -22,15 +21,32 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-MODEL_RELATIVE_PATH = os.environ.get("VOSK_MODEL_PATH", os.path.join(os.path.dirname(__file__), "..", "models", "vosk-model-small-en-us-0.15"))
+# Default model path now under project "resources/models" during dev (Electron prod sets VOSK_MODEL_PATH)
+MODEL_RELATIVE_PATH = os.environ.get(
+    "VOSK_MODEL_PATH",
+    os.path.join(os.path.dirname(__file__), "..", "resources", "models", "vosk-model-small-en-us-0.15"),
+)
 MODEL_ABS_PATH = os.path.abspath(MODEL_RELATIVE_PATH)
 
 _model: Optional[Model] = None
 
 
 def get_model() -> Model:
+    """Load and cache the Vosk ASR model.
+
+    Returns
+    -------
+    Model
+        Loaded Vosk model instance.
+
+    Raises
+    ------
+    RuntimeError
+        If the model directory does not exist.
+    """
     global _model
     if _model is None:
+        # Defer model loading until first use to speed up app start
         if not os.path.exists(MODEL_ABS_PATH):
             raise RuntimeError(f"Vosk model not found at {MODEL_ABS_PATH}")
         _model = Model(MODEL_ABS_PATH)
@@ -39,6 +55,13 @@ def get_model() -> Model:
 
 @app.get("/health")
 async def health():
+    """Health check endpoint to verify the model can be loaded.
+
+    Returns
+    -------
+    dict
+        JSON with status "ok" or error details on failure.
+    """
     try:
         m = get_model()
         ok = m is not None
@@ -66,6 +89,25 @@ SOLFEGE_TO_NUMBER = {
 
 
 class SessionState:
+    """Recognition session state bound to a single WebSocket client.
+
+    Parameters
+    ----------
+    sample_rate : int, optional
+        Target sample rate in Hz for the recognizer, by default 16000.
+
+    Attributes
+    ----------
+    sample_rate : int
+        Input sampling rate.
+    recognizer : KaldiRecognizer
+        Vosk streaming recognizer with constrained grammar.
+    current_segment_id : int or None
+        Identifier for the current active segment.
+    results : list of dict
+        Accumulated segment results with keys ``segmentId``, ``word``, and ``confidence``.
+    """
+
     def __init__(self, sample_rate: int = 16000):
         self.sample_rate = sample_rate
         self.recognizer: KaldiRecognizer = KaldiRecognizer(get_model(), sample_rate, json.dumps(SOLFEGE_GRAMMAR))
@@ -74,15 +116,36 @@ class SessionState:
         self.results = []  # list of {segmentId, word, confidence}
 
     def start_segment(self, segment_id: int):
+        """Begin a new recognition segment and reset the recognizer.
+
+        Parameters
+        ----------
+        segment_id : int
+            Monotonic segment identifier set by the client.
+        """
         # Reset recognizer for clean segmentation
         self.current_segment_id = segment_id
         self.recognizer.Reset()
 
     def accept_audio(self, data: bytes):
+        """Feed raw PCM16 mono audio into the recognizer.
+
+        Parameters
+        ----------
+        data : bytes
+            PCM16 mono bytes at ``self.sample_rate``.
+        """
         # Feed PCM16 mono at self.sample_rate
         self.recognizer.AcceptWaveform(data)
 
     def end_segment(self):
+        """Finalize the current segment and return the best word with confidence.
+
+        Returns
+        -------
+        dict or None
+            A dict with keys ``segmentId``, ``word`` (str or None), and ``confidence`` (float or None), or None if no segment is active.
+        """
         if self.current_segment_id is None:
             return None
         # Final result and reset segment
@@ -117,6 +180,22 @@ class SessionState:
 
 @app.websocket("/ws")
 async def ws_handler(ws: WebSocket):
+    """WebSocket endpoint for streaming ASR.
+
+    The protocol expects JSON control frames with the following ``type`` values:
+
+    - ``"config"``: set session sample rate, e.g., ``{"type":"config","sampleRate":16000}``.
+    - ``"start_segment"``: begin a new segment with id, ``{"type":"start_segment","segmentId":0}``.
+    - ``"end_segment"``: finalize current segment; server replies with ``segment_result``.
+    - ``"end_session"``: finalize session, return accumulated results.
+
+    Binary frames are interpreted as raw PCM16 mono audio at the configured sample rate.
+
+    Parameters
+    ----------
+    ws : fastapi.WebSocket
+        Client WebSocket connection.
+    """
     await ws.accept()
     state: Optional[SessionState] = None
     try:
@@ -176,4 +255,3 @@ async def ws_handler(ws: WebSocket):
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run("backend.main:app", host="127.0.0.1", port=8000, reload=False)
-
