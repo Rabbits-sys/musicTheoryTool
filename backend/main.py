@@ -71,21 +71,9 @@ async def health():
 
 
 SOLFEGE_GRAMMAR = [
-    "do", "re", "mi", "fa", "so", "sol", "la", "ti", "si",
+    "do", "doe", "doh", "re", "ray", "mi", "me", "fa", "fah", "so", "sol", "soh", "la", "lah", "si", "ti", "tea",
     # support elongated or repeated vowels (basic) via word variants handled by recognizer acoustics
 ]
-
-SOLFEGE_TO_NUMBER = {
-    "do": 1,
-    "re": 2,
-    "mi": 3,
-    "fa": 4,
-    "so": 5,
-    "sol": 5,
-    "la": 6,
-    "ti": 7,
-    "si": 7,
-}
 
 
 class SessionState:

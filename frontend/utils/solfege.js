@@ -4,15 +4,23 @@
  * @type {{[syllable: string]: 1|2|3|4|5|6|7}}
  */
 export const solfegeToNumber = {
-  do: 1,
-  re: 2,
-  mi: 3,
-  fa: 4,
-  so: 5,
-  sol: 5,
-  la: 6,
-  ti: 7,
-  si: 7,
+    do: 1,
+    doe: 1,
+    doh: 1,
+    re: 2,
+    ray: 2,
+    mi: 3,
+    me: 3,
+    fa: 4,
+    fah: 4,
+    so: 5,
+    sol: 5,
+    soh: 5,
+    la: 6,
+    lah: 6,
+    si: 7,
+    ti: 7,
+    tea: 7,
 }
 
 /**

@@ -134,7 +134,7 @@ export default function SyllablePracticeRunner() {
               <Typography variant="h2" component="div" sx={{ fontWeight: 700 }}>
                 {currentNumber ?? '-'}
               </Typography>
-              <Typography color="text.secondary">请唱出该数字对应的唱名（1=do, 2=re, 3=mi, 4=fa, 5=so, 6=la, 7=ti）</Typography>
+              <Typography color="text.secondary">请唱出该数字对应的唱名（1=do, 2=re, 3=mi, 4=fa, 5=so, 6=la, 7=si/ti）</Typography>
             </Box>
           )}
         </Stack>
